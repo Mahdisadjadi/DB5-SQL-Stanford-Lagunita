@@ -154,3 +154,23 @@ HAVING AVG(r.stars) = (SELECT MAX(t.score)
                                 GROUP BY mID
                               )t
                       );
+
+
+--Q11
+-- Find the movie(s) with the lowest average rating. Return the movie title(s) 
+-- and average rating. (Hint: This query may be more difficult to write in SQLite 
+-- than other systems; you might think of it as finding the lowest average rating 
+-- and then choosing the movie(s) with that average rating.) 
+SELECT m.title, 
+       AVG(r.stars) AS score
+  FROM rating r
+  JOIN movie m
+    ON r.mID = m.mID
+ GROUP BY r.mID
+HAVING AVG(r.stars) = (SELECT MIN(t.score)
+                       FROM (SELECT mID, 
+                                    AVG(stars) AS score
+                               FROM rating
+                              GROUP BY mID
+                            ) t
+                      );
