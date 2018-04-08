@@ -80,3 +80,77 @@ SELECT DISTINCT rev1.name, rev2.name
    AND rat2.rid = rev2.rid
    AND rat1.mid = rat2.mid
    AND rev1.name < rev2.name;
+
+-- Q6
+-- For each rating that is the lowest (fewest stars) currently in the database, 
+--return the reviewer name, movie title, and number of stars. 
+
+SELECT r.name, 
+       m.title,
+       t.stars
+  FROM (SELECT *
+          FROM rating 
+         WHERE stars = (SELECT MIN(stars) FROM rating)) t
+  JOIN Reviewer r
+    ON r.rID = t.rID
+  JOIN Movie m 
+    ON m.mID = t.mID;
+
+
+-- Q7
+-- List movie titles and average ratings, from highest-rated to lowest-rated. 
+-- If two or more movies have the same average rating, list them in alphabetical order. 
+SELECT m.title, t.score
+FROM movie m
+JOIN
+ (SELECT mID, AVG(stars) AS score
+  FROM rating r
+ GROUP BY mID) t
+ON m.mID = t.mID
+ORDER BY 2 DESC, 1;
+
+-- Q8
+-- Find the names of all reviewers who have contributed three or more ratings. 
+-- (As an extra challenge, try writing the query without HAVING or without COUNT.) 
+SELECT r.name
+FROM (SELECT rID
+        FROM rating
+       GROUP BY rID
+      HAVING COUNT(*) >= 3
+     ) t
+JOIN Reviewer r
+ON t.rID = r.rID;
+
+-- Q9
+-- Some directors directed more than one movie. For all such directors, 
+--return the titles of all movies directed by them, along with the director name. 
+-- Sort by director name, then movie title. (As an extra challenge, try 
+-- writing the query both with and without COUNT.) 
+SELECT m.title, m.director
+FROM (
+        SELECT director
+          FROM movie
+         GROUP BY director
+        HAVING COUNT(mID) > 1
+     ) t
+JOIN Movie m
+ON m.director = t.director
+
+-- Q10
+-- Find the movie(s) with the highest average rating. 
+-- Return the movie title(s) and average rating. (Hint: This query is 
+-- more difficult to write in SQLite than other systems; you might think of it 
+-- as finding the highest average rating and then choosing the movie(s) with that average rating.)
+SELECT m.title, 
+       AVG(r.stars) AS score
+  FROM rating r
+  JOIN movie m
+    ON r.mID = m.mID
+ GROUP BY r.mID
+HAVING AVG(r.stars) = (SELECT MAX(t.score)
+                         FROM (SELECT mID, 
+                                      AVG(stars) AS score
+                                 FROM rating
+                                GROUP BY mID
+                              )t
+                      );
